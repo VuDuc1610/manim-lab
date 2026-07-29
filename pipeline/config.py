@@ -8,6 +8,7 @@ PROMPTS_DIR = PROJECT_ROOT / "prompts"
 PLANNER_MODEL = "gemini-flash-latest"
 CODEGEN_MODEL = "gemini-flash-latest"
 REPAIR_MODEL = "gemini-flash-latest"
+DECODE_MODEL = "gemini-flash-latest"
 
 DEFAULT_QUALITY = "-qm"
 

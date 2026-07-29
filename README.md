@@ -57,8 +57,9 @@ Stitch  — stitch.py     per-scene MP4 -> final MP4 via ffmpeg concat
   `open(`, etc.) on the host, before a render is even attempted. Docker is
   still the real sandbox boundary — this just avoids wasting a render cycle
   on obviously bad output.
-- **This is a local CLI only.** No web server, database, auth, or queue —
-  see `IMPLEMENTATION_PLAN.md` for what's explicitly out of scope.
+- **This is local software.** No deployment, database, or auth beyond what's
+  described below — see `IMPLEMENTATION_PLAN.md` for what's explicitly out
+  of scope for the core pipeline.
 
 ---
 
@@ -77,7 +78,8 @@ Stitch  — stitch.py     per-scene MP4 -> final MP4 via ffmpeg concat
   brew install ffmpeg
   ```
 - **A Gemini API key** — get one at [aistudio.google.com](https://aistudio.google.com/apikey).
-  The free tier caps at 20 requests/day for `gemini-2.5-flash`, which this
+  The free tier caps at 20 requests/day for the flash model this pipeline
+  uses (`gemini-flash-latest`, see `pipeline/config.py`), which this
   pipeline's parallel LLM calls can burn through in a single run — a paid
   tier is recommended for anything beyond light testing.
 
@@ -103,7 +105,7 @@ GEMINI_API_KEY=your-key-here
 docker run --rm -v "$(pwd):/manim" manimcommunity/manim manim -qm example.py SquareToCircle
 
 # Gemini API key works:
-python3 -c "from pipeline.llm import generate; print(generate('Be terse.', 'Say hi', 'gemini-2.5-flash'))"
+python3 -c "from pipeline.llm import generate; print(generate('Be terse.', 'Say hi', 'gemini-flash-latest'))"
 ```
 
 If both of those work, you're ready to go.
@@ -126,6 +128,7 @@ python make_video.py "explain recursion" --scenes 3 --keep-work --strict
 | `--keep-work` | off | Don't delete `work/` (the generated `.py` files and per-scene clips) after the run — useful for debugging a specific scene. |
 | `--strict` | off | Fail the whole run if any scene can't be rendered, instead of dropping it and continuing with the rest. |
 | `--sequential` | off | Debug flag: disable parallelism in codegen/render, to compare timing against the normal concurrent run. |
+| `--mock` | off | Skip Gemini calls entirely, using canned-but-valid output instead (`pipeline/mock_llm.py`). Docker render and ffmpeg stitch still run for real. Useful for testing the pipeline without spending API quota — same effect as setting `MOCK_LLM=1`. |
 
 The finished video is written to `out/{slug}.mp4`, where `slug` comes from
 the plan (e.g. `out/binary_search.mp4`).
@@ -141,6 +144,31 @@ stitch        0.3s
 total        53.0s
 ```
 
+## Web demo
+
+A Flask + React demo built on the same pipeline: a mock SCHD (dividend ETF)
+fund page with a floating widget that generates a base explainer video plus
+3 LLM-suggested "what if" variants (each grounded in a real number from the
+page — e.g. its actual expense ratio), which you can click between instantly
+since they're all pre-generated. A free-text box lets you ask your own
+follow-up, generated live on demand.
+
+```bash
+# Backend (from the project root, needs the same .env/Docker/ffmpeg setup as the CLI)
+python server.py
+# -> http://localhost:5000
+
+# Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev
+# -> http://localhost:5173
+```
+
+Set `MOCK_LLM=1` before `python server.py` to try the whole flow without
+spending Gemini quota (a session generates 4+ videos' worth of calls). This
+is local-only for now — no cloud deployment yet.
+
 ## Running the tests
 
 ```bash
@@ -153,12 +181,14 @@ suite runs in under a second with no API key, Docker, or network required.
 ## Known limitations
 
 - **Gemini free-tier quota**: 20 requests/day is easy to exhaust in one real
-  run, because codegen fires one concurrent request per scene. Live testing
-  is realistically limited to a handful of runs per day on the free tier.
+  run, because codegen fires one concurrent request per scene — and a web
+  demo session generates 4+ full videos at once. Use `--mock`/`MOCK_LLM=1`
+  for iteration; live testing is realistically limited to a handful of runs
+  per day on the free tier.
 - **ffmpeg is a host dependency**, not a zero-dependency Docker-only step —
   the `manimcommunity/manim` image doesn't ship an `ffmpeg` binary (it renders
   via PyAV bindings internally instead).
-- No web UI, TTS/narration audio, persistence, or non-Gemini provider support
-  yet — see `IMPLEMENTATION_PLAN.md` for the full list of what's deliberately
-  out of scope for this phase.
-# manim-lab
+- **The web demo is local-only** — no cloud deployment, persistence, or
+  auth. TTS/narration audio and non-Gemini provider support also aren't
+  implemented — see `IMPLEMENTATION_PLAN.md` for what was deliberately out
+  of scope for the core pipeline's initial build.

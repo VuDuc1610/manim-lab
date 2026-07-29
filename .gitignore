@@ -5,3 +5,4 @@ work/
 out/
 .venv/
 .cache/
+.claude/scheduled_tasks.lock

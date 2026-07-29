@@ -16,6 +16,8 @@ a normal successful run never touches:
   MOCK_LLM_ALWAYS_FAIL_RENDER=5  those scene ids never recover, exhausting
                                   MAX_RENDER_ATTEMPTS (tests the drop /
                                   --strict path).
+  MOCK_LLM_FAIL_DECODE=1         first decode response is invalid JSON,
+                                  forcing decode.py's one repair pass.
 """
 
 import json
@@ -164,6 +166,50 @@ def _mock_scene_code(scene_id: int) -> str:
     return template(scene_id)
 
 
+_INVALID_DECODE_JSON = '{"fund_name": "", "base_topic_prompt": "", "suggestions": []}'
+
+
+def _mock_decode(user_prompt: str) -> str:
+    is_repair = "failed validation with these problems" in user_prompt
+    if not is_repair and os.environ.get("MOCK_LLM_FAIL_DECODE"):
+        return _INVALID_DECODE_JSON
+
+    decode = {
+        "fund_name": "Mock Fund (MOCK)",
+        "base_topic_prompt": (
+            "Explain how the Mock Fund (MOCK) works for a beginner investor: "
+            "its 0.06% expense ratio and quarterly dividend distributions."
+        ),
+        "suggestions": [
+            {
+                "id": "higher_expense_ratio",
+                "question": "What if the fee were 0.75% instead of 0.06%?",
+                "topic_prompt": (
+                    "Explain how long-run returns in the Mock Fund would differ if its "
+                    "expense ratio were 0.75% instead of its actual 0.06%."
+                ),
+            },
+            {
+                "id": "reinvested_dividends",
+                "question": "What if you reinvested every dividend?",
+                "topic_prompt": (
+                    "Explain how reinvesting every quarterly dividend from the Mock Fund "
+                    "compounds an investment's growth over time compared to cash payouts."
+                ),
+            },
+            {
+                "id": "started_five_years_earlier",
+                "question": "What if you'd started investing 5 years earlier?",
+                "topic_prompt": (
+                    "Explain how starting to invest in the Mock Fund 5 years earlier "
+                    "changes the total dividends received and compounding by now."
+                ),
+            },
+        ],
+    }
+    return json.dumps(decode)
+
+
 def _mock_broken_scene(scene_id: int) -> str:
     """Passes sanitize() but throws inside Docker at render time."""
     return f'''from manim import *
@@ -179,6 +225,7 @@ class Scene{scene_id}(Scene):
 def generate(system: str, user: str, model: str) -> str:
     is_codegen = "Generate the Manim source for scene" in user
     is_render_repair = "failed to render" in user
+    is_decode = "Fund page content:" in user
 
     if is_codegen or is_render_repair:
         match = _SCENE_ID_RE.search(user)
@@ -190,5 +237,8 @@ def generate(system: str, user: str, model: str) -> str:
             return _mock_broken_scene(scene_id)
 
         return _mock_scene_code(scene_id)
+
+    if is_decode:
+        return _mock_decode(user)
 
     return _mock_plan(user)

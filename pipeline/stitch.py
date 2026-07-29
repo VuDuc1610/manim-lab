@@ -17,7 +17,9 @@ def _write_concat_file(clips: list[Path]) -> Path:
 
 
 def _run_ffmpeg(args: list[str]) -> subprocess.CompletedProcess:
-    return subprocess.run(["ffmpeg", *args], capture_output=True, text=True)
+    return subprocess.run(
+        ["ffmpeg", *args], capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
 
 
 def stitch(clips: list[Path], out_path: Path) -> Path:
