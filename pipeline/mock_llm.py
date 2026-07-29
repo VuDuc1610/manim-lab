@@ -18,13 +18,30 @@ a normal successful run never touches:
                                   --strict path).
   MOCK_LLM_FAIL_DECODE=1         first decode response is invalid JSON,
                                   forcing decode.py's one repair pass.
+
+The SCHD demo's 4 topics (base + 3 suggestions) are hand-written real content
+(pipeline/schd_content.py), not generic filler — detected via the topic
+prompt / embedded plan slug, so the demo shows real, good-quality Docker
+renders instead of placeholder templates while still spending zero Gemini
+quota.
 """
 
 import json
 import os
 import re
 
+from pipeline.schd_content import PLANS as _SCHD_PLANS
+from pipeline.schd_content import SCENES as _SCHD_SCENES
+from pipeline.schd_content import (
+    SCHD_BASE_TOPIC_PROMPT,
+    SCHD_HIGHER_FEE_TOPIC_PROMPT,
+    SCHD_REINVEST_TOPIC_PROMPT,
+    SCHD_START_EARLIER_TOPIC_PROMPT,
+)
+from pipeline.schd_content import TOPIC_PROMPTS as _SCHD_TOPIC_PROMPTS
+
 _SCENE_ID_RE = re.compile(r"[Ss]cene ?(\d+)(?: only| failed to render)")
+_SCHD_SLUG_MARKER_RE = re.compile(r"SCHD_SLUG: (\S+)")
 
 # Set by the initial (non-repair) planner call so the repair call — which
 # only sees the previous bad response, not the original prompt — can still
@@ -51,6 +68,10 @@ def _mock_plan(user_prompt: str) -> str:
 
     is_repair = "failed validation with these problems" in user_prompt
     if not is_repair:
+        for slug, topic_prompt in _SCHD_TOPIC_PROMPTS.items():
+            if user_prompt.strip() == topic_prompt.strip():
+                return json.dumps(_SCHD_PLANS[slug])
+
         hint = re.search(r"aim for about (\d+) scenes", user_prompt)
         _last_n_scenes = max(3, min(6, int(hint.group(1)))) if hint else 3
         _last_topic = re.sub(r"\s*\(aim for about \d+ scenes\)", "", user_prompt).strip()
@@ -175,35 +196,23 @@ def _mock_decode(user_prompt: str) -> str:
         return _INVALID_DECODE_JSON
 
     decode = {
-        "fund_name": "Mock Fund (MOCK)",
-        "base_topic_prompt": (
-            "Explain how the Mock Fund (MOCK) works for a beginner investor: "
-            "its 0.06% expense ratio and quarterly dividend distributions."
-        ),
+        "fund_name": "Schwab U.S. Dividend Equity ETF (SCHD)",
+        "base_topic_prompt": SCHD_BASE_TOPIC_PROMPT,
         "suggestions": [
             {
                 "id": "higher_expense_ratio",
                 "question": "What if the fee were 0.75% instead of 0.06%?",
-                "topic_prompt": (
-                    "Explain how long-run returns in the Mock Fund would differ if its "
-                    "expense ratio were 0.75% instead of its actual 0.06%."
-                ),
+                "topic_prompt": SCHD_HIGHER_FEE_TOPIC_PROMPT,
             },
             {
                 "id": "reinvested_dividends",
                 "question": "What if you reinvested every dividend?",
-                "topic_prompt": (
-                    "Explain how reinvesting every quarterly dividend from the Mock Fund "
-                    "compounds an investment's growth over time compared to cash payouts."
-                ),
+                "topic_prompt": SCHD_REINVEST_TOPIC_PROMPT,
             },
             {
                 "id": "started_five_years_earlier",
                 "question": "What if you'd started investing 5 years earlier?",
-                "topic_prompt": (
-                    "Explain how starting to invest in the Mock Fund 5 years earlier "
-                    "changes the total dividends received and compounding by now."
-                ),
+                "topic_prompt": SCHD_START_EARLIER_TOPIC_PROMPT,
             },
         ],
     }
@@ -222,6 +231,18 @@ class Scene{scene_id}(Scene):
 '''
 
 
+def _lookup_schd_scene(user: str, scene_id: int) -> str | None:
+    for slug in _SCHD_PLANS:
+        if slug in user:
+            return _SCHD_SCENES.get((slug, scene_id))
+
+    marker = _SCHD_SLUG_MARKER_RE.search(user)
+    if marker:
+        return _SCHD_SCENES.get((marker.group(1), scene_id))
+
+    return None
+
+
 def generate(system: str, user: str, model: str) -> str:
     is_codegen = "Generate the Manim source for scene" in user
     is_render_repair = "failed to render" in user
@@ -230,6 +251,10 @@ def generate(system: str, user: str, model: str) -> str:
     if is_codegen or is_render_repair:
         match = _SCENE_ID_RE.search(user)
         scene_id = int(match.group(1)) if match else 1
+
+        schd_scene = _lookup_schd_scene(user, scene_id)
+        if schd_scene:
+            return schd_scene
 
         if scene_id in _env_ids("MOCK_LLM_ALWAYS_FAIL_RENDER"):
             return _mock_broken_scene(scene_id)
