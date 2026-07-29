@@ -1,29 +1,24 @@
 export default function FundDetailsTable({ fund }) {
-  const rows = [
+  const cells = [
     ["Category", fund.category],
     ["Provider", fund.provider],
-    ["Inception Date", fund.inceptionDate],
-    ["Expense Ratio", `${fund.expenseRatio}%`],
-    ["Distribution Yield", `${fund.distributionYieldPct}%`],
-    ["Distribution Frequency", fund.distributionFrequency],
-    ["Assets Under Management", `$${fund.aumBillions}B`],
+    ["Inception date", fund.inceptionDate],
+    ["Distribution frequency", fund.distributionFrequency],
     ["Benchmark", fund.benchmark],
-    ["Number of Holdings", fund.numberOfHoldings],
+    ["Number of holdings", fund.numberOfHoldings],
   ];
 
   return (
     <section className="fund-section">
-      <h2>Fund Details</h2>
-      <table className="fund-table">
-        <tbody>
-          {rows.map(([label, value]) => (
-            <tr key={label}>
-              <th>{label}</th>
-              <td>{value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h2>Fund details</h2>
+      <div className="stat-grid">
+        {cells.map(([label, value]) => (
+          <div className="stat-cell" key={label}>
+            <span className="stat-label">{label}</span>
+            <span className="stat-value">{value}</span>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

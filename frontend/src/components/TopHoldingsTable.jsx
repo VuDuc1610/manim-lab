@@ -1,25 +1,23 @@
 export default function TopHoldingsTable({ holdings }) {
+  const maxWeight = Math.max(...holdings.map((h) => h.weightPct));
+
   return (
     <section className="fund-section">
-      <h2>Top Holdings</h2>
-      <table className="fund-table fund-table-grid">
-        <thead>
-          <tr>
-            <th>Ticker</th>
-            <th>Name</th>
-            <th>Weight</th>
-          </tr>
-        </thead>
-        <tbody>
-          {holdings.map((h) => (
-            <tr key={h.ticker}>
-              <td className="mono">{h.ticker}</td>
-              <td>{h.name}</td>
-              <td>{h.weightPct}%</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h2>Top holdings</h2>
+      <div className="holdings-list">
+        {holdings.map((h) => (
+          <div className="holding-row" key={h.ticker}>
+            <div className="holding-id">
+              <span className="holding-ticker">{h.ticker}</span>
+              <span className="holding-name">{h.name}</span>
+            </div>
+            <div className="holding-bar-track">
+              <div className="holding-bar-fill" style={{ width: `${(h.weightPct / maxWeight) * 100}%` }} />
+            </div>
+            <span className="holding-weight">{h.weightPct}%</span>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

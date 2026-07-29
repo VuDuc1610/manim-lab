@@ -1,5 +1,6 @@
 import DistributionHistory from "../components/DistributionHistory";
 import FundDetailsTable from "../components/FundDetailsTable";
+import PriceChart from "../components/PriceChart";
 import SectorWeights from "../components/SectorWeights";
 import TopHoldingsTable from "../components/TopHoldingsTable";
 import VerifiedBadge from "../components/VerifiedBadge";
@@ -15,6 +16,23 @@ export default function SchdFundPage() {
         </div>
         <h1>{schdFund.name}</h1>
         <p className="fund-subhead">{schdFund.category}</p>
+
+        <div className="hero-stats">
+          <div className="hero-stat">
+            <span className="hero-stat-value">{schdFund.expenseRatio}%</span>
+            <span className="hero-stat-label">Expense ratio</span>
+          </div>
+          <div className="hero-stat">
+            <span className="hero-stat-value accent">{schdFund.distributionYieldPct}%</span>
+            <span className="hero-stat-label">Distribution yield</span>
+          </div>
+          <div className="hero-stat">
+            <span className="hero-stat-value">${schdFund.aumBillions}B</span>
+            <span className="hero-stat-label">AUM</span>
+          </div>
+        </div>
+
+        <PriceChart />
       </header>
 
       <FundDetailsTable fund={schdFund} />

@@ -1,23 +1,15 @@
 export default function DistributionHistory({ history }) {
   return (
     <section className="fund-section">
-      <h2>Recent Distributions</h2>
-      <table className="fund-table fund-table-grid">
-        <thead>
-          <tr>
-            <th>Ex-Date</th>
-            <th>Amount / Share</th>
-          </tr>
-        </thead>
-        <tbody>
-          {history.map((d) => (
-            <tr key={d.exDate}>
-              <td className="mono">{d.exDate}</td>
-              <td>${d.amount.toFixed(2)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h2>Recent distributions</h2>
+      <div className="distribution-list">
+        {history.map((d) => (
+          <div className="distribution-row" key={d.exDate}>
+            <span className="distribution-date">{d.exDate}</span>
+            <span className="distribution-amount">+${d.amount.toFixed(2)}</span>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
