@@ -5,9 +5,9 @@ WORK_DIR = PROJECT_ROOT / "work"
 OUT_DIR = PROJECT_ROOT / "out"
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
 
-PLANNER_MODEL = "gemini-2.5-flash"
-CODEGEN_MODEL = "gemini-2.5-flash"
-REPAIR_MODEL = "gemini-2.5-flash"
+PLANNER_MODEL = "gemini-flash-latest"
+CODEGEN_MODEL = "gemini-flash-latest"
+REPAIR_MODEL = "gemini-flash-latest"
 
 DEFAULT_QUALITY = "-qm"
 
