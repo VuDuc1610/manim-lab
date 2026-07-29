@@ -31,6 +31,11 @@ def _get_client():
 
 def generate(system: str, user: str, model: str) -> str:
     """Single-turn call. Returns raw text."""
+    if os.environ.get("MOCK_LLM"):
+        from pipeline.mock_llm import generate as mock_generate
+
+        return mock_generate(system, user, model)
+
     client = _get_client()
     config = types.GenerateContentConfig(system_instruction=system)
 

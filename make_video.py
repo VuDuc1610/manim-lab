@@ -1,7 +1,12 @@
 import argparse
+import os
 import shutil
 import sys
 import time
+
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
 
 from pipeline import config
 from pipeline.codegen import generate_all_scenes, generate_scene_code
@@ -95,11 +100,16 @@ def parse_args(argv=None):
     parser.add_argument("--keep-work", action="store_true", dest="keep_work")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--sequential", action="store_true", help="debug: disable parallelism")
+    parser.add_argument(
+        "--mock", action="store_true", help="use canned LLM output instead of calling Gemini"
+    )
     return parser.parse_args(argv)
 
 
 def main(argv=None):
     args = parse_args(argv)
+    if args.mock:
+        os.environ["MOCK_LLM"] = "1"
     try:
         out_path = run(
             args.prompt,

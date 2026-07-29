@@ -31,6 +31,8 @@ def _run_docker_render(scene_id: int, quality: str):
             ],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=config.RENDER_TIMEOUT_SEC,
         )
     except subprocess.TimeoutExpired:
