@@ -68,28 +68,58 @@ Stitch  — stitch.py     per-scene MP4 -> final MP4 via ffmpeg concat
 ### Prerequisites
 
 - **Python 3.11+**
+- **Node.js + npm** — only needed for the web demo's frontend (`frontend/`), not the CLI.
 - **Docker Desktop**, running, with the `manimcommunity/manim` image pulled:
   ```bash
   docker pull manimcommunity/manim
   ```
+  **On Windows**, Docker Desktop requires WSL2. If `docker` commands hang or
+  fail with a "cannot connect to the Docker daemon" / named-pipe error, WSL2
+  probably isn't installed yet:
+  ```bash
+  wsl --install
+  ```
+  This needs an elevated (Administrator) terminal and ends with a reboot.
+  After rebooting, start Docker Desktop and give it a few seconds to finish
+  initializing before retrying.
 - **ffmpeg** on the host (used for the final stitch step — this particular
   `manimcommunity/manim` image build doesn't include an `ffmpeg` binary):
   ```bash
+  # macOS
   brew install ffmpeg
+  # Windows
+  winget install Gyan.FFmpeg
+  # Linux (Debian/Ubuntu)
+  sudo apt install ffmpeg
   ```
+  On Windows, a fresh PATH change from an installer often doesn't apply to
+  an already-open terminal — open a new terminal (or restart your IDE/shell)
+  before verifying `ffmpeg` is found.
 - **A Gemini API key** — get one at [aistudio.google.com](https://aistudio.google.com/apikey).
   The free tier caps at 20 requests/day for the flash model this pipeline
   uses (`gemini-flash-latest`, see `pipeline/config.py`), which this
   pipeline's parallel LLM calls can burn through in a single run — a paid
-  tier is recommended for anything beyond light testing.
+  tier is recommended for anything beyond light testing. Use `--mock` /
+  `MOCK_LLM=1` (see below) to try things out without spending quota.
 
 ### Install
 
 ```bash
 git clone <this-repo>
 cd manim-lab
-python3 -m venv .venv && source .venv/bin/activate   # optional but recommended
+python3 -m venv .venv
 pip install -r requirements.txt
+```
+
+Activate the venv (optional but recommended) before the `pip install` above:
+
+```bash
+# macOS / Linux
+source .venv/bin/activate
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+# Windows (cmd)
+.venv\Scripts\activate.bat
 ```
 
 Create a `.env` file in the project root:
@@ -101,8 +131,10 @@ GEMINI_API_KEY=your-key-here
 ### Verify the setup
 
 ```bash
-# Docker + Manim render a sample scene:
+# Docker + Manim render a sample scene (bash / PowerShell):
 docker run --rm -v "$(pwd):/manim" manimcommunity/manim manim -qm example.py SquareToCircle
+# cmd.exe doesn't support $(...) — use this instead:
+docker run --rm -v "%cd%:/manim" manimcommunity/manim manim -qm example.py SquareToCircle
 
 # Gemini API key works:
 python3 -c "from pipeline.llm import generate; print(generate('Be terse.', 'Say hi', 'gemini-flash-latest'))"
@@ -166,8 +198,20 @@ npm run dev
 ```
 
 Set `MOCK_LLM=1` before `python server.py` to try the whole flow without
-spending Gemini quota (a session generates 4+ videos' worth of calls). This
-is local-only for now — no cloud deployment yet.
+spending Gemini quota (a session generates 4+ videos' worth of calls) — the
+SCHD demo's 4 topics use real, hand-written content either way
+(`pipeline/schd_content.py`), so this mode is safe to demo with:
+
+```bash
+# bash
+MOCK_LLM=1 python server.py
+# PowerShell
+$env:MOCK_LLM = "1"; python server.py
+# cmd.exe
+set MOCK_LLM=1 && python server.py
+```
+
+This is local-only for now — no cloud deployment yet.
 
 ## Running the tests
 
