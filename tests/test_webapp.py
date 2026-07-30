@@ -180,3 +180,51 @@ def test_trigger_suggestion_unknown_id_returns_none():
 
     assert video is None
     assert created is False
+
+
+def test_generate_suggestion_success(client):
+    create_resp = client.post("/api/sessions", json={"fund_content": "SCHD"})
+    session_id = create_resp.get_json()["session_id"]
+    jobs.attach_decode_result(session_id, _decode_result())
+
+    resp = client.post(f"/api/sessions/{session_id}/suggestions/a/generate")
+    assert resp.status_code == 202
+    data = resp.get_json()
+    assert data["video_id"].startswith("vid_")
+
+    video = jobs.get_video(data["video_id"])
+    assert video.kind == "suggestion"
+    assert video.label == "What if A?"
+
+
+def test_generate_suggestion_idempotent_returns_same_video_id(client):
+    create_resp = client.post("/api/sessions", json={"fund_content": "SCHD"})
+    session_id = create_resp.get_json()["session_id"]
+    jobs.attach_decode_result(session_id, _decode_result())
+
+    first = client.post(f"/api/sessions/{session_id}/suggestions/a/generate").get_json()
+    second = client.post(f"/api/sessions/{session_id}/suggestions/a/generate").get_json()
+
+    assert first["video_id"] == second["video_id"]
+
+
+def test_generate_suggestion_404_unknown_suggestion_id(client):
+    create_resp = client.post("/api/sessions", json={"fund_content": "SCHD"})
+    session_id = create_resp.get_json()["session_id"]
+    jobs.attach_decode_result(session_id, _decode_result())
+
+    resp = client.post(f"/api/sessions/{session_id}/suggestions/does_not_exist/generate")
+    assert resp.status_code == 404
+
+
+def test_generate_suggestion_404_unknown_session(client):
+    resp = client.post("/api/sessions/sess_nope/suggestions/a/generate")
+    assert resp.status_code == 404
+
+
+def test_generate_suggestion_409_when_session_not_ready(client):
+    create_resp = client.post("/api/sessions", json={"fund_content": "SCHD"})
+    session_id = create_resp.get_json()["session_id"]
+
+    resp = client.post(f"/api/sessions/{session_id}/suggestions/a/generate")
+    assert resp.status_code == 409

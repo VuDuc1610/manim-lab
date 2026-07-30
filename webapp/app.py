@@ -44,6 +44,21 @@ def create_app() -> Flask:
         orchestrator.start_followup(video.video_id, topic_prompt)
         return jsonify({"video_id": video.video_id, "status": "queued"}), 202
 
+    @app.post("/api/sessions/<session_id>/suggestions/<suggestion_id>/generate")
+    def generate_suggestion(session_id, suggestion_id):
+        session = jobs.get_session(session_id)
+        if session is None:
+            return jsonify({"error": "session not found"}), 404
+        if session.decode_status != "done":
+            return jsonify({"error": "session not ready"}), 409
+
+        video, created = jobs.trigger_suggestion(session_id, suggestion_id)
+        if video is None:
+            return jsonify({"error": "unknown suggestion id"}), 404
+        if created:
+            orchestrator.start_followup(video.video_id, video.topic_prompt)
+        return jsonify({"video_id": video.video_id, "status": "queued"}), 202
+
     @app.get("/api/videos/<video_id>/status")
     def video_status(video_id):
         status = jobs.video_status_dict(video_id)
