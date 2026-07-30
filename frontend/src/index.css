@@ -327,26 +327,6 @@ body {
   gap: 4px;
 }
 
-.stat-cell-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.explain-trigger {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 13px;
-  padding: 2px 4px;
-  opacity: 0.6;
-  transition: opacity 0.15s ease;
-}
-
-.explain-trigger:hover {
-  opacity: 1;
-}
 
 .stat-label {
   font-size: 12px;
@@ -499,32 +479,6 @@ body {
   margin-top: 28px;
 }
 
-/* --- Explain module --- */
-
-.explain-module {
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px 22px;
-  margin-bottom: 16px;
-}
-
-.explain-module-header {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 12px;
-}
-
-.explain-module-title {
-  font-weight: 700;
-  font-size: 15px;
-}
-
-.explain-module-subtitle {
-  font-size: 13px;
-  color: var(--text-muted);
-}
 
 .chip-row {
   display: flex;
