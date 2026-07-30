@@ -327,7 +327,6 @@ body {
   gap: 4px;
 }
 
-
 .stat-label {
   font-size: 12px;
   color: var(--text-muted);
@@ -479,7 +478,6 @@ body {
   margin-top: 28px;
 }
 
-
 .chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -624,7 +622,7 @@ body {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 28px;
+  bottom: 96px;
   transform: translateX(-50%);
   background: var(--panel-bg-2);
   border: 1px solid var(--border-strong);

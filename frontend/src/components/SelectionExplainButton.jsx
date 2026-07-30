@@ -12,6 +12,7 @@ export default function SelectionExplainButton({ selection, onExplain }) {
       type="button"
       className="selection-explain-button"
       style={style}
+      onMouseDown={(e) => e.preventDefault()}
       onClick={() => onExplain(text)}
     >
       ✨ Explain this

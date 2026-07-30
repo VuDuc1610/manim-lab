@@ -25,9 +25,10 @@ export default function SchdFundPage() {
   }
 
   function handleSelectionExplain(text) {
+    const truncated = text.length > 120 ? text.slice(0, 120) + "…" : text;
     setPendingQuestion({
-      prompt: `Explain what "${text}" means in the context of ${schdFund.name}.`,
-      label: text,
+      prompt: `Explain what "${truncated}" means in the context of ${schdFund.name}.`,
+      label: truncated,
     });
     setExplainOpen(true);
     clearSelection();

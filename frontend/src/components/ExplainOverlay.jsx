@@ -36,6 +36,24 @@ export default function ExplainOverlay({ fundContentText, open, onClose, pending
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   const baseVideo = status?.videos?.base;
 
   async function handleAsk(question, label = question) {
@@ -103,7 +121,12 @@ export default function ExplainOverlay({ fundContentText, open, onClose, pending
 
   return (
     <div className="explain-overlay-backdrop" onClick={onClose}>
-      <div className={`explain-overlay${watching ? " watching" : ""}`} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`explain-overlay${watching ? " watching" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button type="button" className="explain-overlay-close" onClick={onClose} aria-label="Close">
           ×
         </button>

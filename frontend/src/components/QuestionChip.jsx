@@ -27,7 +27,7 @@ export default function QuestionChip({ label, videoId, active, onSelect, onTrigg
       disabled={forceDisabled}
       onClick={handleClick}
     >
-      {started && !ready && !failed && <span className="spinner" aria-hidden="true" />}
+      {(forceDisabled || (started && !ready)) && !failed && <span className="spinner" aria-hidden="true" />}
       <span className="question-chip-label">{text}</span>
     </button>
   );
