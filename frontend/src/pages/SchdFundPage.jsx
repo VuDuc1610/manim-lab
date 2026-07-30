@@ -5,6 +5,7 @@ import PriceChart from "../components/PriceChart";
 import SectorWeights from "../components/SectorWeights";
 import TopHoldingsTable from "../components/TopHoldingsTable";
 import VerifiedBadge from "../components/VerifiedBadge";
+import WatchlistStar from "../components/WatchlistStar";
 import Toast from "../components/Toast";
 import TradeBar from "../components/TradeBar";
 import { schdFund } from "../data/schdFund";
@@ -21,6 +22,7 @@ export default function SchdFundPage() {
         <div className="fund-header-top">
           <span className="fund-ticker">{schdFund.ticker}</span>
           <VerifiedBadge />
+          <WatchlistStar />
         </div>
         <h1>{schdFund.name}</h1>
         <p className="fund-subhead">{schdFund.category}</p>

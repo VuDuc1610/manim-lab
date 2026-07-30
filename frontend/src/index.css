@@ -123,6 +123,21 @@ body {
   flex: none;
 }
 
+.watchlist-star {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+
+.watchlist-star.active {
+  color: var(--accent);
+}
+
 .fund-header h1 {
   margin: 14px 0 4px;
   font-family: var(--serif);
