@@ -889,3 +889,26 @@ body {
   z-index: 70;
   white-space: nowrap;
 }
+
+/* --- Explain Entry Button --- */
+
+.explain-entry-button {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow-cta);
+  z-index: 40;
+  transition: transform 0.15s ease;
+}
+
+.explain-entry-button:hover {
+  transform: translateY(-1px);
+}
