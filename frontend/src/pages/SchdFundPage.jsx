@@ -2,13 +2,13 @@ import { useState } from "react";
 import DistributionHistory from "../components/DistributionHistory";
 import ExplainModule from "../components/ExplainModule";
 import FundDetailsTable from "../components/FundDetailsTable";
+import OrderBox from "../components/OrderBox";
 import PriceChart from "../components/PriceChart";
 import SectorWeights from "../components/SectorWeights";
 import TopHoldingsTable from "../components/TopHoldingsTable";
 import VerifiedBadge from "../components/VerifiedBadge";
 import WatchlistStar from "../components/WatchlistStar";
 import Toast from "../components/Toast";
-import TradeBar from "../components/TradeBar";
 import { schdFund, schdFundContentText } from "../data/schdFund";
 
 export default function SchdFundPage() {
@@ -44,7 +44,14 @@ export default function SchdFundPage() {
           </div>
         </div>
 
-        <PriceChart />
+        <div className="chart-order-row">
+          <PriceChart
+            price={schdFund.price}
+            dayChange={schdFund.dayChange}
+            dayChangePct={schdFund.dayChangePct}
+          />
+          <OrderBox ticker={schdFund.ticker} onAction={handleTradeAction} />
+        </div>
       </header>
 
       <ExplainModule
@@ -58,7 +65,6 @@ export default function SchdFundPage() {
       <DistributionHistory history={schdFund.distributionHistory} onExplain={setContextualQuestion} />
       <SectorWeights sectors={schdFund.sectorWeights} />
 
-      <TradeBar onAction={handleTradeAction} />
       <footer className="fund-footer">
         Illustrative demo data, not live market data.
       </footer>

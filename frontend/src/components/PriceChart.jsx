@@ -22,7 +22,7 @@ function seededPoints(seed, count) {
 
 const POINTS_BY_RANGE = Object.fromEntries(RANGES.map((r) => [r, seededPoints(r, 24)]));
 
-export default function PriceChart() {
+export default function PriceChart({ price, dayChange, dayChangePct }) {
   const [activeRange, setActiveRange] = useState("1Y");
 
   const { linePoints, areaPath } = useMemo(() => {
@@ -33,8 +33,18 @@ export default function PriceChart() {
     };
   }, [activeRange]);
 
+  const isUp = dayChange >= 0;
+  const sign = isUp ? "+" : "-";
+
   return (
     <div className="price-chart-wrap">
+      <div className="price-header">
+        <span className="price-current">${price.toFixed(2)}</span>
+        <span className={`price-change${isUp ? " positive" : " negative"}`}>
+          {sign}${Math.abs(dayChange).toFixed(2)} ({sign}
+          {Math.abs(dayChangePct).toFixed(2)}%) Today
+        </span>
+      </div>
       <svg className="price-chart" viewBox="0 0 600 160" preserveAspectRatio="none">
         <defs>
           <linearGradient id="chartFade" x1="0" y1="0" x2="0" y2="1">

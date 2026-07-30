@@ -4,6 +4,21 @@ export const schdFund = {
   provider: "Charles Schwab Asset Management",
   category: "Dividend / U.S. Large-Cap Value",
   inceptionDate: "2011-10-20",
+  // Fixed/illustrative for now — no live price feed wired up yet.
+  price: 33.8,
+  dayChange: -0.08,
+  dayChangePct: -0.24,
+  openPrice: 33.94,
+  highToday: 34.02,
+  lowToday: 33.73,
+  week52High: 34.24,
+  week52Low: 26.21,
+  volume: "30.03M",
+  avgVolume: "22.21M",
+  peRatio: 17.85,
+  thirtyDayYieldPct: 3.28,
+  shortInventory: "Available",
+  borrowRatePct: 0.0,
   expenseRatio: 0.06,
   distributionYieldPct: 3.5,
   distributionFrequency: "Quarterly",
@@ -38,6 +53,7 @@ export const schdFund = {
 };
 
 export const schdFundContentText = `${schdFund.name} (${schdFund.ticker})
+Current Price: $${schdFund.price.toFixed(2)} (${schdFund.dayChangePct}% today, illustrative)
 Category: ${schdFund.category}
 Provider: ${schdFund.provider}
 Inception Date: ${schdFund.inceptionDate}
@@ -47,6 +63,21 @@ Distribution Frequency: ${schdFund.distributionFrequency}
 Assets Under Management: $${schdFund.aumBillions}B (illustrative)
 Benchmark: ${schdFund.benchmark}
 Number of Holdings: ${schdFund.numberOfHoldings}
+
+Key Statistics (illustrative):
+- AUM: $${schdFund.aumBillions}B
+- Price-Earnings ratio: ${schdFund.peRatio}
+- 30-Day yield: ${schdFund.thirtyDayYieldPct}%
+- Average volume: ${schdFund.avgVolume}
+- High today: $${schdFund.highToday.toFixed(2)}
+- Low today: $${schdFund.lowToday.toFixed(2)}
+- Open price: $${schdFund.openPrice.toFixed(2)}
+- Volume: ${schdFund.volume}
+- 52 Week high: $${schdFund.week52High.toFixed(2)}
+- 52 Week low: $${schdFund.week52Low.toFixed(2)}
+- Expense ratio: ${schdFund.expenseRatio}%
+- Short inventory: ${schdFund.shortInventory}
+- Borrow rate: ${schdFund.borrowRatePct.toFixed(2)}%
 
 Top Holdings:
 ${schdFund.topHoldings.map((h) => `- ${h.name} (${h.ticker}): ${h.weightPct}%`).join("\n")}
