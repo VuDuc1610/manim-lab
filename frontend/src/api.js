@@ -30,6 +30,12 @@ export function postFollowup(sessionId, question) {
   });
 }
 
+export function generateSuggestion(sessionId, suggestionId) {
+  return request(`/api/sessions/${sessionId}/suggestions/${suggestionId}/generate`, {
+    method: "POST",
+  });
+}
+
 export function getVideoStatus(videoId) {
   return request(`/api/videos/${videoId}/status`);
 }
