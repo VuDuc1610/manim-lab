@@ -654,7 +654,7 @@ body {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 28px;
+  bottom: 84px;
   transform: translateX(-50%);
   background: var(--panel-bg-2);
   border: 1px solid var(--border-strong);
