@@ -1,30 +1,37 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-// Illustrative-only trend line (matches the app's existing "illustrative
-// demo data" framing) — this is the single most recognizable Robinhood
-// visual motif, so it earns its place even though the app has no live price
-// series to chart.
-const POINTS = [
-  [0, 128],
-  [60, 118],
-  [120, 132],
-  [180, 98],
-  [240, 108],
-  [300, 76],
-  [360, 88],
-  [420, 58],
-  [480, 68],
-  [540, 38],
-  [600, 22],
-];
+const RANGES = ["1D", "1W", "1M", "3M", "YTD", "1Y", "5Y", "MAX"];
 
-const LINE_POINTS = POINTS.map(([x, y]) => `${x},${y}`).join(" ");
-const AREA_PATH = `M${POINTS.map(([x, y]) => `${x},${y}`).join(" L")} L600,160 L0,160 Z`;
+// Deterministic pseudo-random walk seeded by range name — illustrative only
+// (matches the app's existing "illustrative demo data" framing), but gives
+// each range a visibly distinct line instead of reusing one static shape.
+function seededPoints(seed, count) {
+  let x = [...seed].reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const next = () => {
+    x = (x * 1103515245 + 12345) & 0x7fffffff;
+    return x / 0x7fffffff;
+  };
+  const points = [];
+  let y = 90 + next() * 20;
+  for (let i = 0; i < count; i++) {
+    y = Math.max(10, Math.min(150, y + (next() - 0.5) * 30));
+    points.push([Math.round((600 * i) / (count - 1)), Math.round(y)]);
+  }
+  return points;
+}
 
-const RANGES = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
+const POINTS_BY_RANGE = Object.fromEntries(RANGES.map((r) => [r, seededPoints(r, 24)]));
 
 export default function PriceChart() {
   const [activeRange, setActiveRange] = useState("1Y");
+
+  const { linePoints, areaPath } = useMemo(() => {
+    const points = POINTS_BY_RANGE[activeRange];
+    return {
+      linePoints: points.map(([x, y]) => `${x},${y}`).join(" "),
+      areaPath: `M${points.map(([x, y]) => `${x},${y}`).join(" L")} L600,160 L0,160 Z`,
+    };
+  }, [activeRange]);
 
   return (
     <div className="price-chart-wrap">
@@ -35,9 +42,9 @@ export default function PriceChart() {
             <stop offset="100%" stopColor="#00c805" stopOpacity="0" />
           </linearGradient>
         </defs>
-        <path d={AREA_PATH} fill="url(#chartFade)" />
+        <path d={areaPath} fill="url(#chartFade)" />
         <polyline
-          points={LINE_POINTS}
+          points={linePoints}
           fill="none"
           stroke="#00c805"
           strokeWidth="2.5"
