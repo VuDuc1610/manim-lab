@@ -1,5 +1,6 @@
 import { useState } from "react";
 import DistributionHistory from "../components/DistributionHistory";
+import ExplainModule from "../components/ExplainModule";
 import FundDetailsTable from "../components/FundDetailsTable";
 import PriceChart from "../components/PriceChart";
 import SectorWeights from "../components/SectorWeights";
@@ -8,10 +9,11 @@ import VerifiedBadge from "../components/VerifiedBadge";
 import WatchlistStar from "../components/WatchlistStar";
 import Toast from "../components/Toast";
 import TradeBar from "../components/TradeBar";
-import { schdFund } from "../data/schdFund";
+import { schdFund, schdFundContentText } from "../data/schdFund";
 
 export default function SchdFundPage() {
   const [toastMessage, setToastMessage] = useState(null);
+  const [contextualQuestion, setContextualQuestion] = useState(null);
 
   function handleTradeAction(label) {
     setToastMessage(`${label} isn't available in this demo`);
@@ -45,9 +47,15 @@ export default function SchdFundPage() {
         <PriceChart />
       </header>
 
-      <FundDetailsTable fund={schdFund} />
-      <TopHoldingsTable holdings={schdFund.topHoldings} />
-      <DistributionHistory history={schdFund.distributionHistory} />
+      <ExplainModule
+        fundContentText={schdFundContentText}
+        contextualQuestion={contextualQuestion}
+        onContextualHandled={() => setContextualQuestion(null)}
+      />
+
+      <FundDetailsTable fund={schdFund} onExplain={setContextualQuestion} />
+      <TopHoldingsTable holdings={schdFund.topHoldings} onExplain={setContextualQuestion} />
+      <DistributionHistory history={schdFund.distributionHistory} onExplain={setContextualQuestion} />
       <SectorWeights sectors={schdFund.sectorWeights} />
 
       <TradeBar onAction={handleTradeAction} />

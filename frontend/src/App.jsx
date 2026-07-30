@@ -1,6 +1,4 @@
-import FloatingWidgetButton from "./components/FloatingWidgetButton";
 import SchdFundPage from "./pages/SchdFundPage";
-import { schdFundContentText } from "./data/schdFund";
 
 export default function App() {
   return (
@@ -23,7 +21,6 @@ export default function App() {
         </div>
       </div>
       <SchdFundPage />
-      <FloatingWidgetButton fundContentText={schdFundContentText} />
     </>
   );
 }

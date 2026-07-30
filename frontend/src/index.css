@@ -427,6 +427,78 @@ body {
   margin-top: 28px;
 }
 
+/* --- Explain module --- */
+
+.explain-module {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.explain-module-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.explain-module-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.explain-module-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.question-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel-bg-2);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.question-chip:hover:not(:disabled) {
+  border-color: var(--text-faint);
+}
+
+.question-chip:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.question-chip.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+}
+
+.question-chip.failed {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
 /* --- Floating widget --- */
 
 .floating-widget-button {
