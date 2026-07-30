@@ -65,10 +65,11 @@ def test_get_session_status_full_shape(client):
     data = resp.get_json()
     assert data["decode_status"] == "done"
     assert data["fund_name"] == "Mock Fund"
-    assert set(data["videos"].keys()) == {"base", "suggestion_1", "suggestion_2", "suggestion_3"}
+    assert set(data["videos"].keys()) == {"base"}
     assert data["videos"]["base"]["status"] == "queued"
     assert data["videos"]["base"]["video_url"] is None
-    assert data["videos"]["suggestion_1"]["label"] == "What if A?"
+    assert [s["id"] for s in data["suggestions"]] == ["a", "b", "c"]
+    assert data["suggestions"][0] == {"id": "a", "question": "What if A?", "video_id": None}
 
 
 def test_followup_404_for_unknown_session(client):
@@ -145,3 +146,37 @@ def test_video_file_success(client, tmp_path):
     resp = client.get(f"/api/videos/{video.video_id}/file")
     assert resp.status_code == 200
     assert resp.data == b"fake mp4 bytes"
+
+
+def test_trigger_suggestion_creates_video_on_first_call():
+    session = jobs.create_session()
+    jobs.attach_decode_result(session.session_id, _decode_result())
+
+    video, created = jobs.trigger_suggestion(session.session_id, "a")
+
+    assert created is True
+    assert video.kind == "suggestion"
+    assert video.label == "What if A?"
+    assert video.topic_prompt == "Explain A."
+
+
+def test_trigger_suggestion_is_idempotent():
+    session = jobs.create_session()
+    jobs.attach_decode_result(session.session_id, _decode_result())
+
+    first, first_created = jobs.trigger_suggestion(session.session_id, "a")
+    second, second_created = jobs.trigger_suggestion(session.session_id, "a")
+
+    assert first_created is True
+    assert second_created is False
+    assert first.video_id == second.video_id
+
+
+def test_trigger_suggestion_unknown_id_returns_none():
+    session = jobs.create_session()
+    jobs.attach_decode_result(session.session_id, _decode_result())
+
+    video, created = jobs.trigger_suggestion(session.session_id, "does_not_exist")
+
+    assert video is None
+    assert created is False

@@ -34,7 +34,8 @@ class Session:
     decode_error: str | None = None
     fund_name: str | None = None
     base_topic_prompt: str | None = None
-    video_slots: dict[str, str] = field(default_factory=dict)  # "base" -> video_id, "suggestion_1" -> video_id, ...
+    suggestions: list[dict] = field(default_factory=list)  # [{id, question, topic_prompt}]
+    video_slots: dict[str, str] = field(default_factory=dict)  # "base" -> video_id, "suggestion_<id>" -> video_id
 
 
 def create_session() -> Session:
@@ -82,12 +83,9 @@ def update_video(video_id: str, **fields) -> None:
 
 
 def attach_decode_result(session_id: str, decode: dict) -> None:
-    """Creates the base + 3 suggestion VideoJobs and wires them into the session."""
+    """Creates the base VideoJob and stores the 3 suggestion prompts. Suggestion
+    videos are created on demand via trigger_suggestion(), not here."""
     base_video = create_video("base", decode["base_topic_prompt"])
-    slots = {"base": base_video.video_id}
-    for i, suggestion in enumerate(decode["suggestions"], start=1):
-        video = create_video("suggestion", suggestion["topic_prompt"], label=suggestion["question"])
-        slots[f"suggestion_{i}"] = video.video_id
 
     with _lock:
         session = _sessions.get(session_id)
@@ -95,8 +93,33 @@ def attach_decode_result(session_id: str, decode: dict) -> None:
             return
         session.fund_name = decode["fund_name"]
         session.base_topic_prompt = decode["base_topic_prompt"]
-        session.video_slots = slots
+        session.suggestions = decode["suggestions"]
+        session.video_slots = {"base": base_video.video_id}
         session.decode_status = "done"
+
+
+def trigger_suggestion(session_id: str, suggestion_id: str) -> tuple[VideoJob | None, bool]:
+    """Returns (video, created). created=False means it was already triggered
+    (idempotent re-click) or suggestion_id/session_id doesn't exist (video is None)."""
+    slot = f"suggestion_{suggestion_id}"
+    with _lock:
+        session = _sessions.get(session_id)
+        if session is None:
+            return None, False
+        existing_video_id = session.video_slots.get(slot)
+        if existing_video_id is not None:
+            return _videos.get(existing_video_id), False
+        suggestion = next((s for s in session.suggestions if s["id"] == suggestion_id), None)
+        if suggestion is None:
+            return None, False
+
+    video = create_video("suggestion", suggestion["topic_prompt"], label=suggestion["question"])
+    with _lock:
+        session = _sessions.get(session_id)
+        if session is None:
+            return None, False
+        session.video_slots[slot] = video.video_id
+    return video, True
 
 
 def video_status_dict(video_id: str) -> dict | None:
@@ -126,4 +149,12 @@ def session_status_dict(session_id: str) -> dict | None:
         "fund_name": session.fund_name,
         "base_topic_prompt": session.base_topic_prompt,
         "videos": {slot: video_status_dict(vid) for slot, vid in session.video_slots.items()},
+        "suggestions": [
+            {
+                "id": s["id"],
+                "question": s["question"],
+                "video_id": session.video_slots.get(f"suggestion_{s['id']}"),
+            }
+            for s in session.suggestions
+        ],
     }
