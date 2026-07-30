@@ -1,7 +1,7 @@
 export default function SectorWeights({ sectors }) {
   return (
     <section className="fund-section">
-      <h2>Sector Weights</h2>
+      <h2>Sector weights</h2>
       <div className="sector-bars">
         {sectors.map((s) => (
           <div className="sector-row" key={s.sector}>

@@ -34,11 +34,11 @@ export default function SchdFundPage() {
           </div>
           <div className="hero-stat">
             <span className="hero-stat-value accent">{schdFund.distributionYieldPct}%</span>
-            <span className="hero-stat-label">Distribution yield</span>
+            <span className="hero-stat-label">Dividend yield (TTM)</span>
           </div>
           <div className="hero-stat">
             <span className="hero-stat-value">${schdFund.aumBillions}B</span>
-            <span className="hero-stat-label">AUM</span>
+            <span className="hero-stat-label">Net assets</span>
           </div>
         </div>
 

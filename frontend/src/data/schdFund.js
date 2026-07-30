@@ -42,7 +42,7 @@ Category: ${schdFund.category}
 Provider: ${schdFund.provider}
 Inception Date: ${schdFund.inceptionDate}
 Expense Ratio: ${schdFund.expenseRatio}%
-Distribution Yield: ${schdFund.distributionYieldPct}% (illustrative)
+Dividend Yield (TTM): ${schdFund.distributionYieldPct}% (illustrative)
 Distribution Frequency: ${schdFund.distributionFrequency}
 Assets Under Management: $${schdFund.aumBillions}B (illustrative)
 Benchmark: ${schdFund.benchmark}
