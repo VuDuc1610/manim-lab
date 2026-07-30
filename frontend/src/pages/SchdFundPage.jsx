@@ -1,12 +1,20 @@
+import { useState } from "react";
 import DistributionHistory from "../components/DistributionHistory";
 import FundDetailsTable from "../components/FundDetailsTable";
 import PriceChart from "../components/PriceChart";
 import SectorWeights from "../components/SectorWeights";
 import TopHoldingsTable from "../components/TopHoldingsTable";
 import VerifiedBadge from "../components/VerifiedBadge";
+import Toast from "../components/Toast";
+import TradeBar from "../components/TradeBar";
 import { schdFund } from "../data/schdFund";
 
 export default function SchdFundPage() {
+  const [toastMessage, setToastMessage] = useState(null);
+
+  function handleTradeAction(label) {
+    setToastMessage(`${label} isn't available in this demo`);
+  }
   return (
     <div className="fund-page">
       <header className="fund-header">
@@ -40,9 +48,11 @@ export default function SchdFundPage() {
       <DistributionHistory history={schdFund.distributionHistory} />
       <SectorWeights sectors={schdFund.sectorWeights} />
 
+      <TradeBar onAction={handleTradeAction} />
       <footer className="fund-footer">
         Illustrative demo data, not live market data.
       </footer>
+      <Toast message={toastMessage} onDone={() => setToastMessage(null)} />
     </div>
   );
 }

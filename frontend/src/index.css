@@ -637,3 +637,55 @@ body {
   opacity: 0.5;
   cursor: default;
 }
+
+/* --- Trade bar + toast --- */
+
+.trade-bar {
+  display: flex;
+  gap: 12px;
+  margin: 24px 0;
+  position: sticky;
+  bottom: 16px;
+}
+
+.trade-button {
+  flex: 1;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.trade-button:active {
+  transform: scale(0.98);
+}
+
+.trade-buy {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: var(--shadow-cta);
+}
+
+.trade-sell {
+  background: var(--panel-bg-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  z-index: 60;
+}
