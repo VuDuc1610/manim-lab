@@ -871,3 +871,21 @@ body {
 .order-box-outline-button:hover {
   background: var(--accent-bg);
 }
+
+/* --- Selection Explain Button --- */
+
+.selection-explain-button {
+  position: fixed;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  z-index: 70;
+  white-space: nowrap;
+}
