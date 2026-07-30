@@ -11,7 +11,6 @@ with no shared disk state, so those stay fully concurrent.
 """
 
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 
 from pipeline import config
@@ -23,7 +22,6 @@ from pipeline.stitch import StitchError, stitch
 from webapp import jobs
 
 PIPELINE_MAX_WORKERS = 4
-BASE_PRIORITY_DELAY_SEC = 2.0
 
 _pipeline_pool = ThreadPoolExecutor(max_workers=PIPELINE_MAX_WORKERS)
 _render_disk_lock = threading.Lock()
@@ -50,11 +48,6 @@ def _run_session(session_id: str, fund_content: str) -> None:
 
     base_id = session.video_slots["base"]
     _pipeline_pool.submit(_run_video_pipeline, base_id, decode["base_topic_prompt"])
-
-    time.sleep(BASE_PRIORITY_DELAY_SEC)
-    for i, suggestion in enumerate(decode["suggestions"], start=1):
-        video_id = session.video_slots[f"suggestion_{i}"]
-        _pipeline_pool.submit(_run_video_pipeline, video_id, suggestion["topic_prompt"])
 
 
 def _run_video_pipeline(video_id: str, topic_prompt: str) -> None:
