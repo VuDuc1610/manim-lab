@@ -912,3 +912,128 @@ body {
 .explain-entry-button:hover {
   transform: translateY(-1px);
 }
+
+.explain-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.explain-overlay {
+  position: relative;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  max-width: 560px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px;
+  transition: max-width 0.2s ease;
+}
+
+.explain-overlay.watching {
+  max-width: 960px;
+  max-height: 92vh;
+}
+
+.explain-overlay-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--panel-bg-2);
+  color: var(--text-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.explain-overlay-close:hover {
+  color: var(--text);
+}
+
+.explain-overlay-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+  padding-right: 28px;
+}
+
+.explain-overlay-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.explain-overlay-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.explain-back-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 0 12px;
+}
+
+.explain-back-link:hover {
+  color: var(--text);
+}
+
+.explain-generating,
+.explain-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 32px 8px;
+}
+
+.explain-generating .spinner,
+.explain-ready .spinner {
+  width: 22px;
+  height: 22px;
+  border-width: 3px;
+}
+
+.explain-generating-title,
+.explain-ready-title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.explain-watch-button {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.explain-watch-button:hover {
+  background: var(--accent-hover);
+}

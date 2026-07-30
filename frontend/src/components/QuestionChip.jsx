@@ -5,7 +5,6 @@ export default function QuestionChip({ label, videoId, active, onSelect, onTrigg
   const started = Boolean(videoId);
   const ready = status?.status === "done";
   const failed = status?.status === "error";
-  const isDisabled = forceDisabled || (started && !ready && !failed);
 
   function handleClick() {
     if (forceDisabled) return;
@@ -13,7 +12,7 @@ export default function QuestionChip({ label, videoId, active, onSelect, onTrigg
       onTrigger();
       return;
     }
-    if (ready) onSelect(videoId);
+    onSelect(videoId);
   }
 
   let text = label;
@@ -25,10 +24,10 @@ export default function QuestionChip({ label, videoId, active, onSelect, onTrigg
     <button
       type="button"
       className={`question-chip${active ? " active" : ""}${failed ? " failed" : ""}`}
-      disabled={isDisabled}
+      disabled={forceDisabled}
       onClick={handleClick}
     >
-      {isDisabled && !failed && <span className="spinner" aria-hidden="true" />}
+      {started && !ready && !failed && <span className="spinner" aria-hidden="true" />}
       <span className="question-chip-label">{text}</span>
     </button>
   );
