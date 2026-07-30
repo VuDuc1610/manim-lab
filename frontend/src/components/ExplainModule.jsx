@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createSession, generateSuggestion, postFollowup, videoFileUrl } from "../api";
 import { useSessionStatus } from "../hooks/useSessionStatus";
 import FollowupInput from "./FollowupInput";
@@ -11,10 +11,17 @@ export default function ExplainModule({ fundContentText, contextualQuestion, onC
   const { status, error } = useSessionStatus(sessionId);
   const [activeVideoId, setActiveVideoId] = useState(null);
   const [suggestionVideoIds, setSuggestionVideoIds] = useState({});
+  const [pendingSuggestionIds, setPendingSuggestionIds] = useState(() => new Set());
   const [extraQuestions, setExtraQuestions] = useState([]);
   const [askError, setAskError] = useState(null);
+  const sessionInitRef = useRef(false);
 
   useEffect(() => {
+    // StrictMode double-invokes mount effects in dev; without this guard that
+    // means two createSession calls (two full decode + base-video pipeline
+    // runs) per page load, which burns Gemini's tight free-tier quota.
+    if (sessionInitRef.current) return;
+    sessionInitRef.current = true;
     createSession(fundContentText)
       .then((result) => setSessionId(result.session_id))
       .catch((err) => setInitError(err.message));
@@ -44,6 +51,12 @@ export default function ExplainModule({ fundContentText, contextualQuestion, onC
   }, [contextualQuestion, sessionId]);
 
   async function handleTriggerSuggestion(suggestionId) {
+    // Guard against a second click firing a second real generateSuggestion
+    // call (a real Gemini pipeline run) while the first is still in flight —
+    // the "pending" video id below is rendered as null to QuestionChip, which
+    // alone would leave the chip looking untriggered and clickable again.
+    if (pendingSuggestionIds.has(suggestionId)) return;
+    setPendingSuggestionIds((s) => new Set(s).add(suggestionId));
     setSuggestionVideoIds((m) => (m[suggestionId] ? m : { ...m, [suggestionId]: "pending" }));
     try {
       const result = await generateSuggestion(sessionId, suggestionId);
@@ -53,6 +66,12 @@ export default function ExplainModule({ fundContentText, contextualQuestion, onC
       setSuggestionVideoIds((m) => {
         const next = { ...m };
         delete next[suggestionId];
+        return next;
+      });
+    } finally {
+      setPendingSuggestionIds((s) => {
+        const next = new Set(s);
+        next.delete(suggestionId);
         return next;
       });
     }
@@ -109,6 +128,7 @@ export default function ExplainModule({ fundContentText, contextualQuestion, onC
                 active={currentVideoId === videoId}
                 onSelect={setActiveVideoId}
                 onTrigger={() => handleTriggerSuggestion(s.id)}
+                disabled={pendingSuggestionIds.has(s.id)}
               />
             );
           })}
