@@ -1,4 +1,4 @@
-export default function FundDetailsTable({ fund, onExplain }) {
+export default function FundDetailsTable({ fund }) {
   const cells = [
     ["AUM", `$${fund.aumBillions}B`],
     ["Price-Earnings ratio", fund.peRatio],
@@ -21,26 +21,12 @@ export default function FundDetailsTable({ fund, onExplain }) {
       <div className="stat-grid stat-grid-4">
         {cells.map(([label, value]) => (
           <div className="stat-cell" key={label}>
-            <div className="stat-cell-label-row">
-              <span className="stat-label">{label}</span>
-              <button
-                type="button"
-                className="explain-trigger"
-                aria-label={`Explain ${label}`}
-                onClick={() => onExplain(`Explain what "${label}" (${value}) means for this fund.`)}
-              >
-                ✨
-              </button>
-            </div>
+            <span className="stat-label">{label}</span>
             <span className="stat-value">{value}</span>
           </div>
         ))}
       </div>
-      <a
-        className="fund-details-link"
-        href="#"
-        onClick={(e) => e.preventDefault()}
-      >
+      <a className="fund-details-link" href="#" onClick={(e) => e.preventDefault()}>
         View Prospectus and Reports
       </a>
     </section>

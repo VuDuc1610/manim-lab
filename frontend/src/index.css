@@ -369,7 +369,7 @@ body {
 
 .holding-row {
   display: grid;
-  grid-template-columns: 120px 1fr 44px 28px;
+  grid-template-columns: 120px 1fr 44px;
   align-items: center;
   gap: 14px;
 }

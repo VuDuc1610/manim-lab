@@ -1,4 +1,4 @@
-export default function TopHoldingsTable({ holdings, onExplain }) {
+export default function TopHoldingsTable({ holdings }) {
   const maxWeight = Math.max(...holdings.map((h) => h.weightPct));
 
   return (
@@ -15,14 +15,6 @@ export default function TopHoldingsTable({ holdings, onExplain }) {
               <div className="holding-bar-fill" style={{ width: `${(h.weightPct / maxWeight) * 100}%` }} />
             </div>
             <span className="holding-weight">{h.weightPct}%</span>
-            <button
-              type="button"
-              className="explain-trigger"
-              aria-label={`Explain ${h.name}`}
-              onClick={() => onExplain(`Explain why ${h.name} (${h.ticker}) is ${h.weightPct}% of this fund.`)}
-            >
-              ✨
-            </button>
           </div>
         ))}
       </div>
