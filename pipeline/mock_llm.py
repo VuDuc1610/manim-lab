@@ -18,6 +18,9 @@ a normal successful run never touches:
                                   --strict path).
   MOCK_LLM_FAIL_DECODE=1         first decode response is invalid JSON,
                                   forcing decode.py's one repair pass.
+  MOCK_LLM_FAIL_QUICK_EXPLAIN=1  quick_explain response is invalid JSON (no
+                                  repair pass exists for this stage, so this
+                                  tests the raised QuickExplainError path).
 
 The SCHD demo's 4 topics (base + 3 suggestions) are hand-written real content
 (pipeline/schd_content.py), not generic filler — detected via the topic
@@ -219,6 +222,27 @@ def _mock_decode(user_prompt: str) -> str:
     return json.dumps(decode)
 
 
+_INVALID_QUICK_EXPLAIN_JSON = "not valid json"
+
+
+def _mock_quick_explain(user_prompt: str) -> str:
+    if os.environ.get("MOCK_LLM_FAIL_QUICK_EXPLAIN"):
+        return _INVALID_QUICK_EXPLAIN_JSON
+
+    topic = user_prompt.split("Quick explanation request:", 1)[-1].strip()
+    short_topic = topic[:60] or "this topic"
+    explain = {
+        "headline": f"Mock explanation: {short_topic}",
+        "explanation": f"Mock quick explanation of: {topic}",
+        "key_points": [
+            f"Mock point 1 about {short_topic}",
+            f"Mock point 2 about {short_topic}",
+            f"Mock point 3 about {short_topic}",
+        ],
+    }
+    return json.dumps(explain)
+
+
 def _mock_broken_scene(scene_id: int) -> str:
     """Passes sanitize() but throws inside Docker at render time."""
     return f'''from manim import *
@@ -247,6 +271,7 @@ def generate(system: str, user: str, model: str) -> str:
     is_codegen = "Generate the Manim source for scene" in user
     is_render_repair = "failed to render" in user
     is_decode = "Fund page content:" in user
+    is_quick_explain = "Quick explanation request:" in user
 
     if is_codegen or is_render_repair:
         match = _SCENE_ID_RE.search(user)
@@ -265,5 +290,8 @@ def generate(system: str, user: str, model: str) -> str:
 
     if is_decode:
         return _mock_decode(user)
+
+    if is_quick_explain:
+        return _mock_quick_explain(user)
 
     return _mock_plan(user)

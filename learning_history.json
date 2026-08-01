@@ -1,0 +1,66 @@
+[
+  {
+    "video_id": "vid_1",
+    "kind": "base",
+    "label": null,
+    "title": "Understanding the SCHD Dividend ETF",
+    "quick_explain": {
+      "headline": "SCHD: Low-cost dividend investing across 104 stocks",
+      "explanation": "SCHD is an exchange-traded fund that collects profits from 104 top dividend-paying companies and pays them out to you quarterly, charging just $0.60 per $1,000 invested each year.",
+      "key_points": [
+        "Ultra-low 0.06% fee costs only $0.60 per $1,000 invested yearly",
+        "Pays a 3.5% annual dividend yield, distributed quarterly to investors",
+        "Holds 104 value stocks led by Financials and Health Care sectors",
+        "Tracks the Dow Jones U.S. Dividend 100 Index for reliable income"
+      ]
+    }
+  },
+  {
+    "video_id": "vid_4",
+    "kind": "followup",
+    "label": "Explain what \"Expense ratio\" means in the context of Schwab U.S. Dividend Equity ETF.",
+    "title": "Understanding Expense Ratios: SCHD",
+    "quick_explain": {
+      "headline": "Understanding SCHD's low expense ratio",
+      "explanation": "An expense ratio is the annual fee charged to manage an ETF, automatically deducted from your investment's total returns. For SCHD, the ultra-low 0.06% fee means you pay just $0.60 a year for every $1,000 invested.",
+      "key_points": [
+        "Annual fee charged by the fund manager to cover operating costs",
+        "SCHD's 0.06% ratio equals $0.60 per year for every $1,000 invested",
+        "Deducted automatically from fund assets, so you never get a separate bill",
+        "Lower ratios let you keep a larger portion of your investment returns"
+      ]
+    }
+  },
+  {
+    "video_id": "vid_3",
+    "kind": "base",
+    "label": null,
+    "title": "Understanding the SCHD Dividend ETF",
+    "quick_explain": {
+      "headline": "How SCHD works: Low fees, steady dividends, value focus",
+      "explanation": "SCHD is a low-cost ETF that offers regular cash flow by investing in 104 dividend-paying companies, with significant exposure to stable sectors like Financials.",
+      "key_points": [
+        "Low 0.06% expense ratio costs just $0.60 per $1,000 invested yearly",
+        "Pays quarterly dividends yielding about 3.5% at a $33.80 share price",
+        "Holds 104 value-oriented stocks, led by Financials at 19.2%",
+        "Designed to generate steady cash income and long-term value exposure"
+      ]
+    }
+  },
+  {
+    "video_id": "vid_2",
+    "kind": "base",
+    "label": null,
+    "title": "Understanding the SCHD Dividend ETF",
+    "quick_explain": {
+      "headline": "How SCHD offers low fees, value, and dividends",
+      "explanation": "SCHD is a low-cost fund that pays quarterly income to investors by holding 104 dividend-paying value stocks. For every $1,000 invested, you pay just $0.60 a year in management fees while collecting a ~3.5% yield.",
+      "key_points": [
+        "0.06% expense ratio costs just $0.60 per year per $1,000 invested",
+        "Pays dividends quarterly with a yield around 3.5%",
+        "A 17.85 P/E ratio reflects a focus on value companies",
+        "Spreads risk across 104 established dividend-paying stocks"
+      ]
+    }
+  }
+]

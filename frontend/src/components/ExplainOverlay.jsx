@@ -1,14 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { createSession, generateSuggestion, postFollowup, videoFileUrl } from "../api";
+import { useEffect, useState } from "react";
+import { generateSuggestion, postFollowup, videoFileUrl } from "../api";
 import { useSessionStatus } from "../hooks/useSessionStatus";
 import { useVideoStatus } from "../hooks/useVideoStatus";
 import FollowupInput from "./FollowupInput";
 import QuestionChip from "./QuestionChip";
+import QuickExplainCard from "./QuickExplainCard";
 import VideoPlayer from "./VideoPlayer";
 
-export default function ExplainOverlay({ fundContentText, open, onClose, pendingQuestion, onPendingHandled }) {
-  const [sessionId, setSessionId] = useState(null);
-  const [initError, setInitError] = useState(null);
+export default function ExplainOverlay({ sessionId, initError, open, onClose, pendingQuestion, onPendingHandled }) {
   const { status, error } = useSessionStatus(sessionId);
   const [suggestionVideoIds, setSuggestionVideoIds] = useState({});
   const [pendingSuggestionIds, setPendingSuggestionIds] = useState(() => new Set());
@@ -16,18 +15,6 @@ export default function ExplainOverlay({ fundContentText, open, onClose, pending
   const [askError, setAskError] = useState(null);
   const [focusedVideoId, setFocusedVideoId] = useState(null);
   const [watching, setWatching] = useState(false);
-  const sessionInitRef = useRef(false);
-
-  useEffect(() => {
-    // StrictMode double-invokes mount effects in dev; without this guard that
-    // means two createSession calls (two full decode + base-video pipeline
-    // runs) per page load, which burns Gemini's tight free-tier quota.
-    if (sessionInitRef.current) return;
-    sessionInitRef.current = true;
-    createSession(fundContentText)
-      .then((result) => setSessionId(result.session_id))
-      .catch((err) => setInitError(err.message));
-  }, [fundContentText]);
 
   useEffect(() => {
     if (!open) {
@@ -56,10 +43,10 @@ export default function ExplainOverlay({ fundContentText, open, onClose, pending
 
   const baseVideo = status?.videos?.base;
 
-  async function handleAsk(question, label = question) {
+  async function handleAsk(question, label = question, grounded = true) {
     setAskError(null);
     try {
-      const result = await postFollowup(sessionId, question);
+      const result = await postFollowup(sessionId, question, grounded);
       setExtraQuestions((qs) => [...qs, { videoId: result.video_id, label }]);
       return result;
     } catch (err) {
@@ -68,16 +55,31 @@ export default function ExplainOverlay({ fundContentText, open, onClose, pending
     }
   }
 
-  async function handleAskAndFocus(question, label = question) {
-    const result = await handleAsk(question, label);
+  async function handleAskAndFocus(question, label = question, grounded = true) {
+    const result = await handleAsk(question, label, grounded);
     if (result) setFocusedVideoId(result.video_id);
   }
 
   useEffect(() => {
-    if (!pendingQuestion || !sessionId) return;
-    handleAskAndFocus(pendingQuestion.prompt, pendingQuestion.label).finally(onPendingHandled);
+    // Highlighting the fund itself (e.g. "SCHD") jumps straight to the
+    // already-generated Overview video — no API call involved, so there's
+    // nothing to gate behind a confirmation and it can fire automatically
+    // as soon as decode is ready. Everything else (a real term to explain)
+    // waits for an explicit "Need visualization?" click below instead of
+    // firing immediately — see handleConfirmPending.
+    if (!pendingQuestion?.useBase || !sessionId || status?.decode_status !== "done") return;
+    if (baseVideo?.video_id) {
+      setFocusedVideoId(baseVideo.video_id);
+      onPendingHandled();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingQuestion, sessionId]);
+  }, [pendingQuestion, sessionId, status?.decode_status, baseVideo?.video_id]);
+
+  async function handleConfirmPending() {
+    if (!pendingQuestion) return;
+    await handleAskAndFocus(pendingQuestion.prompt, pendingQuestion.label, false);
+    onPendingHandled();
+  }
 
   async function handleTriggerSuggestion(suggestionId) {
     // Guard against a second click firing a second real generateSuggestion
@@ -150,7 +152,19 @@ export default function ExplainOverlay({ fundContentText, open, onClose, pending
           />
         )}
 
-        {status?.decode_status === "done" && !focusedVideoId && (
+        {status?.decode_status === "done" && !focusedVideoId && pendingQuestion && !pendingQuestion.useBase && (
+          <div className="explain-confirm">
+            <button type="button" className="explain-back-link" onClick={() => onPendingHandled()}>
+              ‹ Back
+            </button>
+            <p className="explain-confirm-label">{pendingQuestion.label}</p>
+            <button type="button" className="explain-watch-button" onClick={handleConfirmPending}>
+              Need visualization?
+            </button>
+          </div>
+        )}
+
+        {status?.decode_status === "done" && !focusedVideoId && !pendingQuestion && (
           <>
             <div className="explain-overlay-header">
               <span className="explain-overlay-title">✨ Don't understand something?</span>
@@ -204,6 +218,7 @@ function FocusedView({ videoId, label, watching, onWatch, onBack }) {
   const { status } = useVideoStatus(videoId);
   const ready = status?.status === "done";
   const failed = status?.status === "error";
+  const quickExplain = status?.quick_explain_status === "done" ? status.quick_explain : null;
 
   return (
     <div className="explain-focused">
@@ -217,6 +232,7 @@ function FocusedView({ videoId, label, watching, onWatch, onBack }) {
         <p className="panel-error">Video generation failed: {status.error}</p>
       ) : ready ? (
         <div className="explain-ready">
+          {quickExplain && <QuickExplainCard data={quickExplain} />}
           <p className="explain-ready-title">{label}</p>
           <button type="button" className="explain-watch-button" onClick={onWatch}>
             ▶ Watch
@@ -224,9 +240,15 @@ function FocusedView({ videoId, label, watching, onWatch, onBack }) {
         </div>
       ) : (
         <div className="explain-generating">
-          <span className="spinner" aria-hidden="true" />
-          <p className="explain-generating-title">{label}</p>
-          <p className="panel-status">{status?.stage_detail || status?.status || "Generating…"}</p>
+          {quickExplain ? (
+            <QuickExplainCard data={quickExplain} />
+          ) : (
+            <p className="explain-generating-title">{label}</p>
+          )}
+          <div className="explain-generating-progress">
+            <span className="spinner" aria-hidden="true" />
+            <p className="panel-status">{status?.stage_detail || status?.status || "Generating…"}</p>
+          </div>
         </div>
       )}
     </div>

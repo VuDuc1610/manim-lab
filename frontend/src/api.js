@@ -23,10 +23,10 @@ export function getSessionStatus(sessionId) {
   return request(`/api/sessions/${sessionId}`);
 }
 
-export function postFollowup(sessionId, question) {
+export function postFollowup(sessionId, question, grounded = true) {
   return request(`/api/sessions/${sessionId}/followup`, {
     method: "POST",
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, grounded }),
   });
 }
 
@@ -38,6 +38,10 @@ export function generateSuggestion(sessionId, suggestionId) {
 
 export function getVideoStatus(videoId) {
   return request(`/api/videos/${videoId}/status`);
+}
+
+export function getHistory() {
+  return request("/api/history");
 }
 
 export function videoFileUrl(videoId) {

@@ -1,6 +1,6 @@
 import pytest
 
-from webapp import jobs, orchestrator
+from webapp import history_store, jobs, orchestrator
 from webapp.app import create_app
 
 
@@ -70,6 +70,7 @@ def test_get_session_status_full_shape(client):
     assert data["videos"]["base"]["video_url"] is None
     assert [s["id"] for s in data["suggestions"]] == ["a", "b", "c"]
     assert data["suggestions"][0] == {"id": "a", "question": "What if A?", "video_id": None}
+    assert data["followups"] == []
 
 
 def test_followup_404_for_unknown_session(client):
@@ -109,6 +110,82 @@ def test_followup_success(client):
     assert video.kind == "followup"
     assert video.label == "what about fees?"
     assert "what about fees?" in video.topic_prompt
+    assert "Explain mock fund." in video.topic_prompt
+
+
+def test_followup_ungrounded_uses_question_as_topic_prompt_directly(client):
+    """grounded=False (highlight-to-explain's term-definition questions)
+    skips merging the fund's base_topic_prompt in — the question is already
+    self-contained, and prepending the full fund overview drowns it out."""
+    create_resp = client.post("/api/sessions", json={"fund_content": "SCHD"})
+    session_id = create_resp.get_json()["session_id"]
+    jobs.attach_decode_result(session_id, _decode_result())
+
+    question = 'Explain what "PE ratio" means in the context of Mock Fund.'
+    resp = client.post(f"/api/sessions/{session_id}/followup", json={"question": question, "grounded": False})
+    assert resp.status_code == 202
+
+    video = jobs.get_video(resp.get_json()["video_id"])
+    assert video.topic_prompt == question
+
+
+def test_followup_records_on_session(client):
+    create_resp = client.post("/api/sessions", json={"fund_content": "SCHD"})
+    session_id = create_resp.get_json()["session_id"]
+    jobs.attach_decode_result(session_id, _decode_result())
+
+    resp = client.post(f"/api/sessions/{session_id}/followup", json={"question": "what about fees?"})
+    video_id = resp.get_json()["video_id"]
+
+    session = jobs.get_session(session_id)
+    assert session.followups == [{"video_id": video_id, "question": "what about fees?"}]
+
+
+def test_followup_multiple_appends_in_ask_order(client):
+    create_resp = client.post("/api/sessions", json={"fund_content": "SCHD"})
+    session_id = create_resp.get_json()["session_id"]
+    jobs.attach_decode_result(session_id, _decode_result())
+
+    first = client.post(f"/api/sessions/{session_id}/followup", json={"question": "q1"}).get_json()
+    second = client.post(f"/api/sessions/{session_id}/followup", json={"question": "q2"}).get_json()
+
+    session = jobs.get_session(session_id)
+    assert session.followups == [
+        {"video_id": first["video_id"], "question": "q1"},
+        {"video_id": second["video_id"], "question": "q2"},
+    ]
+
+
+def test_session_status_includes_followups(client):
+    create_resp = client.post("/api/sessions", json={"fund_content": "SCHD"})
+    session_id = create_resp.get_json()["session_id"]
+    jobs.attach_decode_result(session_id, _decode_result())
+
+    resp = client.post(f"/api/sessions/{session_id}/followup", json={"question": "what about fees?"})
+    video_id = resp.get_json()["video_id"]
+
+    status = client.get(f"/api/sessions/{session_id}").get_json()
+    assert status["followups"] == [{"video_id": video_id, "question": "what about fees?"}]
+
+
+def test_record_followup_unknown_session_is_noop():
+    jobs.record_followup("sess_does_not_exist", "vid_1", "q")  # must not raise
+
+
+def test_get_history_empty(client, tmp_path, monkeypatch):
+    monkeypatch.setattr(history_store, "HISTORY_FILE", tmp_path / "learning_history.json")
+
+    resp = client.get("/api/history")
+    assert resp.status_code == 200
+    assert resp.get_json() == {"entries": []}
+
+
+def test_get_history_returns_persisted_entries(client, tmp_path, monkeypatch):
+    monkeypatch.setattr(history_store, "HISTORY_FILE", tmp_path / "learning_history.json")
+    history_store.append({"video_id": "vid_1", "label": "Overview"})
+
+    resp = client.get("/api/history")
+    assert resp.get_json() == {"entries": [{"video_id": "vid_1", "label": "Overview"}]}
 
 
 def test_video_status_404_for_unknown_video(client):
@@ -123,6 +200,19 @@ def test_video_status_success(client):
     data = resp.get_json()
     assert data["video_id"] == video.video_id
     assert data["status"] == "queued"
+    assert data["quick_explain_status"] == "pending"
+    assert data["quick_explain"] is None
+
+
+def test_video_status_includes_quick_explain_once_done(client):
+    video = jobs.create_video("base", "explain mock fund")
+    result = {"headline": "h", "explanation": "e", "key_points": ["a", "b"]}
+    jobs.update_video(video.video_id, quick_explain_status="done", quick_explain=result)
+
+    resp = client.get(f"/api/videos/{video.video_id}/status")
+    data = resp.get_json()
+    assert data["quick_explain_status"] == "done"
+    assert data["quick_explain"] == result
 
 
 def test_video_file_404_for_unknown_video(client):

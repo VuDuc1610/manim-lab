@@ -17,6 +17,7 @@ from pipeline import config
 from pipeline.codegen import generate_all_scenes
 from pipeline.decode import DecodeError, decode_fund_content
 from pipeline.planner import PlanError, make_plan
+from pipeline.quick_explain import quick_explain
 from pipeline.renderer import RenderError, render_all
 from pipeline.stitch import StitchError, stitch
 from webapp import jobs
@@ -33,6 +34,7 @@ def start_session(session_id: str, fund_content: str) -> None:
 
 def start_followup(video_id: str, topic_prompt: str) -> None:
     _pipeline_pool.submit(_run_video_pipeline, video_id, topic_prompt)
+    _pipeline_pool.submit(_run_quick_explain, video_id, topic_prompt)
 
 
 def _run_session(session_id: str, fund_content: str) -> None:
@@ -42,12 +44,28 @@ def _run_session(session_id: str, fund_content: str) -> None:
     except DecodeError as e:
         jobs.update_session(session_id, decode_status="error", decode_error=str(e))
         return
+    except Exception as e:
+        jobs.update_session(session_id, decode_status="error", decode_error=f"unexpected error: {e}")
+        return
 
     jobs.attach_decode_result(session_id, decode)
     session = jobs.get_session(session_id)
 
     base_id = session.video_slots["base"]
     _pipeline_pool.submit(_run_video_pipeline, base_id, decode["base_topic_prompt"])
+    _pipeline_pool.submit(_run_quick_explain, base_id, decode["base_topic_prompt"])
+
+
+def _run_quick_explain(video_id: str, topic_prompt: str) -> None:
+    """Runs alongside _run_video_pipeline for the same video, so the frontend
+    has something to show while the real video renders. Best-effort only —
+    no repair pass, failure just leaves the frontend showing its plain
+    spinner instead of a quick-explain card."""
+    try:
+        result = quick_explain(topic_prompt)
+        jobs.update_video(video_id, quick_explain_status="done", quick_explain=result)
+    except Exception:
+        jobs.update_video(video_id, quick_explain_status="error")
 
 
 def _run_video_pipeline(video_id: str, topic_prompt: str) -> None:
@@ -77,6 +95,7 @@ def _run_video_pipeline(video_id: str, topic_prompt: str) -> None:
             stitch(clips, out_path)
 
         jobs.update_video(video_id, status="done", out_path=out_path, stage_detail="")
+        jobs.persist_history_entry(video_id)
     except (PlanError, RenderError, StitchError) as e:
         jobs.update_video(video_id, status="error", error=str(e))
     except Exception as e:

@@ -39,8 +39,24 @@ def create_app() -> Flask:
         if not isinstance(question, str) or not question.strip():
             return jsonify({"error": "question is required"}), 400
 
-        topic_prompt = f"{session.base_topic_prompt} Specifically, explain what would change if: {question}"
+        # grounded=True (default) is for "what if" hypotheticals typed into the
+        # free-text box — they need the fund's real numbers to reason about a
+        # change. grounded=False is for highlight-to-explain's term-definition
+        # questions, which are already self-contained (e.g. 'Explain what "PE
+        # ratio" means...') — merging the full fund overview in front of those
+        # drowns out the actual question, so the video ends up mostly about the
+        # fund in general instead of the highlighted term.
+        grounded = data.get("grounded", True)
+        if grounded:
+            topic_prompt = (
+                f"{question} Background on the fund, for grounding only — the video "
+                f"should stay focused on answering the question above, not restate "
+                f"this: {session.base_topic_prompt}"
+            )
+        else:
+            topic_prompt = question
         video = jobs.create_video("followup", topic_prompt, label=question)
+        jobs.record_followup(session_id, video.video_id, question)
         orchestrator.start_followup(video.video_id, topic_prompt)
         return jsonify({"video_id": video.video_id, "status": "queued"}), 202
 
@@ -58,6 +74,10 @@ def create_app() -> Flask:
         if created:
             orchestrator.start_followup(video.video_id, video.topic_prompt)
         return jsonify({"video_id": video.video_id, "status": "queued"}), 202
+
+    @app.get("/api/history")
+    def get_history():
+        return jsonify({"entries": jobs.history_entries()})
 
     @app.get("/api/videos/<video_id>/status")
     def video_status(video_id):

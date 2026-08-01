@@ -12,9 +12,9 @@ import VerifiedBadge from "../components/VerifiedBadge";
 import WatchlistStar from "../components/WatchlistStar";
 import Toast from "../components/Toast";
 import { useTextSelection } from "../hooks/useTextSelection";
-import { schdFund, schdFundContentText } from "../data/schdFund";
+import { schdFund } from "../data/schdFund";
 
-export default function SchdFundPage() {
+export default function SchdFundPage({ sessionId, initError }) {
   const [toastMessage, setToastMessage] = useState(null);
   const [explainOpen, setExplainOpen] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState(null);
@@ -25,6 +25,21 @@ export default function SchdFundPage() {
   }
 
   function handleSelectionExplain(text) {
+    const trimmed = text.trim();
+    // Highlighting the fund itself (its ticker or full name) should show the
+    // whole-fund Overview, not a generated video about "what SCHD means" —
+    // everything else is treated as a standalone finance term to explain on
+    // its own, not folded into the fund's general overview.
+    const isFundItself =
+      new RegExp(`\\b${schdFund.ticker}\\b`, "i").test(trimmed) || trimmed.toLowerCase() === schdFund.name.toLowerCase();
+
+    if (isFundItself) {
+      setPendingQuestion({ useBase: true });
+      setExplainOpen(true);
+      clearSelection();
+      return;
+    }
+
     const truncated = text.length > 120 ? text.slice(0, 120) + "…" : text;
     setPendingQuestion({
       prompt: `Explain what "${truncated}" means in the context of ${schdFund.name}.`,
@@ -82,7 +97,8 @@ export default function SchdFundPage() {
       <ExplainEntryButton onClick={() => setExplainOpen(true)} />
       {!explainOpen && <SelectionExplainButton selection={selection} onExplain={handleSelectionExplain} />}
       <ExplainOverlay
-        fundContentText={schdFundContentText}
+        sessionId={sessionId}
+        initError={initError}
         open={explainOpen}
         onClose={() => setExplainOpen(false)}
         pendingQuestion={pendingQuestion}
